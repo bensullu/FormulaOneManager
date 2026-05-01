@@ -77,11 +77,14 @@ public partial class MainForm : Form
             else if (tabControl.SelectedTab == driversTab) RefreshDriversGrid();
         };
 
-        // Populate category combo box with the "all" option plus distinct categories.
-        ResetCategoryFilter();
-
-        // Load demo data on first run.
+        // Load demo data on first run BEFORE populating the category filter,
+        // otherwise the dropdown ends up with only the "(all)" entry because
+        // the repository is still empty when the categories are computed.
         SeedData.Populate(_service);
+
+        // Populate category combo box with the "all" option plus the
+        // distinct categories that are now actually present in the data.
+        ResetCategoryFilter();
 
         // Refresh every visible list now that data is in place.
         RefreshAllGrids();
