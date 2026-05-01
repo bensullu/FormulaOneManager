@@ -58,6 +58,7 @@ public partial class MainForm : Form
         categoryFilter.SelectedIndexChanged += (_, _) => RefreshDriversGrid();
         onlyAvailableCheck.CheckedChanged += (_, _) => RefreshDriversGrid();
         driversGrid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) EditDriver(); };
+        driversGrid.CellToolTipTextNeeded += OnDriversGridToolTipNeeded;
 
         // Wire up the Teams tab.
         addTeamButton.Click += (_, _) => AddTeam();
@@ -555,6 +556,16 @@ public partial class MainForm : Form
             // Unknown errors get a more technical message but never crash the app.
             MessageBox.Show(this, ex.ToString(), "Unexpected error",
                 MessageBoxButtons.OK, MessageBoxIcon.Stop);
+        }
+    }
+
+    // Shows the category racing motto as a tooltip when hovering over a driver row.
+    private void OnDriversGridToolTipNeeded(object? sender, DataGridViewCellToolTipTextNeededEventArgs e)
+    {
+        if (e.RowIndex >= 0 && e.RowIndex < _driversView.Count)
+        {
+            Driver driver = _driversView[e.RowIndex];
+            e.ToolTipText = $"{driver.Category}: {driver.GetRacingMotto()}";
         }
     }
 
