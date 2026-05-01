@@ -1,0 +1,27 @@
+## .NET / Visual Studio build outputs
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.swp
+
+## Visual Studio cache and temporary files
+.vs/
+.vscode/
+
+## Rider / ReSharper
+_ReSharper.*
+.idea/
+*.DotSettings.user
+
+## Operating system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## NuGet
+*.nupkg
+.nuget/
