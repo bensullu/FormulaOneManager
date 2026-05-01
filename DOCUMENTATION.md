@@ -6,12 +6,11 @@
 ## 1. Title and author
 
 **Application title:** Formula 1 Manager
-**Author:** *<Your full name>*
-**Group / academic year:** *<Your group code>*
+**Author:** Süleyman Efe Metik
 **Course:** Advanced Programming
 **Lab:** 8 / 9 – "Pole do popisu"
-**Lecturer:** dr Waldemar Bartyna
-**Submission date:** *<dd-mm-yyyy>*
+**Lecturer:** dr Łukasz Marchel
+**Submission date:** 02-05-2026
 
 ---
 

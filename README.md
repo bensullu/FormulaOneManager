@@ -70,4 +70,4 @@ and **File → Open…** to reload it back.
 
 ## Author
 
-Efe – Erasmus / Advanced Programming, lab 8/9.
+Süleyman Efe Metik – Erasmus / Advanced Programming, lab 8/9 (dr Łukasz Marchel).
