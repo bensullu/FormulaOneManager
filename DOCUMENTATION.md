@@ -35,14 +35,18 @@ The domain has three first-class concepts:
 
 Through the application the user can add, edit and remove drivers and teams,
 sign contracts that are validated against business rules (a driver who is
-already under contract or medically unfit cannot be signed), search and filter
-the driver list, see live statistics computed via LINQ, and finally save / load
-the whole state to JSON or XML files from the application's main menu.
+already under contract, medically unfit, suspended or fails a category-specific
+age rule cannot be signed), search and filter the driver list, see live
+statistics computed via LINQ, and finally save / load the whole state to JSON
+or XML files from the application's main menu.
 
 The project showcases every construct asked for in the assignment: abstraction
 layers, polymorphism, custom exceptions, delegates and events, LINQ queries,
 generic types, extension methods, and persistence through XML / JSON
-serialization triggered from a `MenuStrip`.
+serialization triggered from a `MenuStrip`. On top of that the domain enforces
+realistic motorsport rules — for example the FIA Super Licence minimum age of
+18 for Formula 1 — through polymorphic validation, both at the data-entry
+level and at the contract-signing level.
 
 ---
 
@@ -83,6 +87,17 @@ Requirements: .NET SDK 9.0 and Windows (because of WinForms).
   through a dedicated dialog. The dialog rebuilds the category-specific
   fields when the user changes the category combo box, so the form always
   matches the picked subclass.
+* The age input is automatically clamped to the legal range for the picked
+  category: F1 starts at 18 (FIA Super Licence rule), junior karting caps
+  at 18, and F2 / Rookie accept any reasonable age. The user therefore
+  cannot even type an invalid age in the editor.
+* The same rules are enforced again on the service side via the polymorphic
+  `Driver.EnsureValidForCategory()` method, so importing data from JSON /
+  XML or any future code path also goes through the check.
+* The "contract status" of a driver in the editor is **read-only** — the
+  contract state can only be changed through the dedicated *Sign contract*
+  workflow, which guarantees that no business rule can be bypassed by
+  toggling a checkbox.
 * Edit an existing driver in place. The category cannot be changed during
   editing because the runtime type is immutable.
 * Remove a driver. If the driver still has contract records, the application
@@ -92,7 +107,7 @@ Requirements: .NET SDK 9.0 and Windows (because of WinForms).
 * Filter drivers by exact category through a combo box that is rebuilt
   dynamically from the current data.
 * Toggle "only available" to hide drivers who are injured, suspended,
-  retired or already signed.
+  retired, already signed or fail a category-specific age rule.
 * Per-driver tooltip with the category racing motto (`F1: "Lights out and
   away we go!"`, `F2: "On the road to F1!"`, etc.).
 
@@ -131,6 +146,11 @@ Requirements: .NET SDK 9.0 and Windows (because of WinForms).
   on `Driver`, overridden by `F1Driver` (age >= 18) and `KartingDriver`
   (age <= 18) – a textbook example of polymorphism producing the right
   message for the right concrete type.
+* The same rules also exist as **hard validation** in
+  `Driver.EnsureValidForCategory()`, which is called by `RacingService`
+  whenever a driver is added or updated. Even if the GUI is bypassed, an
+  underage F1 driver or an over-age junior karter cannot enter the
+  repository.
 * When a contract is signed, the corresponding driver is automatically
   marked as signed, so they immediately disappear from the "available"
   filter.
@@ -194,9 +214,8 @@ its building blocks can be reused for any other domain:
 
 ## 6. Pictures and descriptions of interesting parts
 
-> *Replace each placeholder image path with the actual screenshots you
-> capture from the running application. Save them next to this document
-> in a `screenshots/` folder.*
+The screenshots below are stored in the `screenshots/` folder of the
+repository and were captured from the running application.
 
 ### 6.1 Main window – Drivers tab
 
@@ -208,7 +227,7 @@ name. The toolbar at the top hosts the live search box, the category
 filter and the "only available" check. The button bar at the bottom drives
 the CRUD actions and the contract-signing flow.
 
-### 6.2 Adding a driver – polymorphic editor
+### 6.2 Adding a driver – polymorphic editor with category-aware validation
 
 ![Add driver dialog](screenshots/02-add-driver-dialog.png)
 
@@ -216,7 +235,12 @@ The driver editor rebuilds itself whenever the category combo box changes,
 exposing only the fields that belong to the picked subclass (titles and
 pole positions for F1, junior academy membership for F2, karting class
 for Karting, testing kilometres for Rookie). This is a direct application
-of polymorphism inside the GUI.
+of polymorphism inside the GUI. In addition, the age input is clamped to
+the range allowed by the picked category – for an F1 driver the spinner
+starts at 18 because of the FIA Super Licence rule, while a junior karting
+driver cannot exceed 18. The same rule is enforced a second time at the
+service layer through `Driver.EnsureValidForCategory()`, so the constraint
+holds even when data is imported from a JSON / XML file.
 
 ### 6.3 Sign contract dialog
 
@@ -249,9 +273,15 @@ is chosen automatically based on the file extension picked by the user.
 
 ![Invalid contract dialog](screenshots/06-invalid-contract.png)
 
-Trying to sign an injured driver triggers an `InvalidContractException`,
-which is caught by the GUI's `TryRun` helper and shown as a friendly
-error dialog. The application keeps running normally afterwards.
+Trying to sign a driver who is unavailable triggers an
+`InvalidContractException`. The exception message is produced by the
+polymorphic `GetAvailabilityIssue()` method on the concrete `Driver`
+subclass, so the dialog explains exactly *why* the contract was refused –
+for example *"Driver is suspended by the FIA"*, *"Driver is currently
+injured and cannot race"*, or *"Driver is below the FIA Super Licence
+minimum age of 18 for Formula 1"*. The exception is caught by the GUI's
+`TryRun` helper and shown as a friendly error dialog, so the application
+keeps running normally afterwards.
 
 ### 6.7 Contracts tab with cross-repository LINQ join
 
@@ -302,13 +332,17 @@ classDiagram
         +bool HasContract
         +string Category
         +GetRacingMotto() string
+        +GetAvailabilityIssue() string?
         +IsAvailable() bool
+        +EnsureValidForCategory() void
     }
 
     class F1Driver {
         +int ChampionshipTitles
         +int PolePositions
         +bool IsChampionshipContender
+        +GetAvailabilityIssue() string?
+        +EnsureValidForCategory() void
     }
 
     class F2Driver {
@@ -319,6 +353,8 @@ classDiagram
     class KartingDriver {
         +string KartingClass
         +int SeasonWins
+        +GetAvailabilityIssue() string?
+        +EnsureValidForCategory() void
     }
 
     class RookieDriver {
@@ -425,8 +461,9 @@ classDiagram
 |----------------------------|-------------------------|
 | Library + WinForms desktop app | `FormulaOneManager.Library` (class library) and `FormulaOneManager.App` (WinForms project) |
 | Abstraction layers and common code base | `IRacingEntity → RacingEntity → Driver → F1Driver/F2Driver/KartingDriver/RookieDriver`; `IRepository<T> → Repository<T> → DriverRepository/TeamRepository/ContractRepository`; `IRacingStorage → JsonRacingStorage / XmlRacingStorage` |
-| Polymorphism | `Driver.Category`, `Driver.GetRacingMotto()`, `Driver.IsAvailable()` overridden in every concrete subclass |
+| Polymorphism | `Driver.Category`, `Driver.GetRacingMotto()`, `Driver.GetAvailabilityIssue()` and `Driver.EnsureValidForCategory()` overridden in concrete subclasses (e.g. `F1Driver` enforces age >= 18, `KartingDriver` enforces age <= 18) |
 | Custom exceptions | `RacingException` hierarchy in `Exceptions/` (5 classes) |
+| Two-tier business validation | UI clamping in `DriverEditForm.ApplyAgeRangeForCategory`; service-side `Driver.EnsureValidForCategory` invoked from `RacingService.ValidateDriver`; contract-time check via `GetAvailabilityIssue` in `RacingService.SignContract` |
 | Delegates | `DriverAddedHandler`, `DriverSignedHandler`, `RacingLogHandler` in `Events/RacingDelegates.cs` |
 | LINQ queries | `RacingService.BuildStatisticsReport`, `RacingService.SearchDrivers`, `MainForm.RefreshContractsGrid` (join), `RacingExtensions` |
 | Clean GUI with `MenuStrip` | `MainForm.Designer.cs` |
