@@ -292,6 +292,18 @@ drivers and teams repositories. Even after a driver or team is removed,
 the contract row keeps showing "(deleted)" so the audit trail is
 preserved.
 
+### 6.8 Teams tab – second core entity
+
+![Teams tab](screenshots/08-teams-tab.png)
+
+The Teams tab lists every registered constructor (team name, headquarters,
+country, budget cap in millions of USD, founding year). The `Add team`,
+`Edit` and `Remove` buttons drive the same CRUD pattern as on the Drivers
+tab and are backed by `RacingService` and the `TeamRepository`. This
+screen shows that the domain is not only about drivers: teams are
+first-class persistence entities with their own validation and their own
+serialization in JSON / XML snapshots.
+
 ---
 
 ## 7. Class diagram
