@@ -56,16 +56,16 @@ The project was completed **individually**.
 
 The full source code is available at:
 
-> *<https://github.com/USERNAME/FormulaOneManager>*  *(replace with your URL)*
+> <https://github.com/bensullu/FormulaOneManager>
 
 The repository follows a standard .NET solution layout and contains a single
-`main` branch. The first commit is the entire working application; further
-commits (if any) are recorded in `git log`.
+`main` branch. Each meaningful change is recorded as its own commit so that
+the development timeline can be reconstructed from `git log`.
 
 To clone and run the project locally:
 
 ```powershell
-git clone https://github.com/USERNAME/FormulaOneManager.git
+git clone https://github.com/bensullu/FormulaOneManager.git
 cd FormulaOneManager
 dotnet build
 dotnet run --project FormulaOneManager.App
@@ -442,7 +442,7 @@ classDiagram
 ## Appendix B – Build instructions for the lecturer
 
 ```powershell
-git clone https://github.com/USERNAME/FormulaOneManager.git
+git clone https://github.com/bensullu/FormulaOneManager.git
 cd FormulaOneManager
 dotnet build
 dotnet run --project FormulaOneManager.App
