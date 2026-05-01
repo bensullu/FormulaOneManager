@@ -18,7 +18,17 @@ public class KartingDriver : Driver
     // Karting is where champions are born.
     public override string GetRacingMotto() => "Future world champion in the making!";
 
-    // Karting drivers must be young enough to qualify for junior series.
-    public override bool IsAvailable() =>
-        base.IsAvailable() && Age <= 18;
+    // Karting (junior) drivers must be young enough to qualify for the series.
+    public override string? GetAvailabilityIssue()
+    {
+        // Run the shared rules first (contract / fitness checks).
+        string? baseIssue = base.GetAvailabilityIssue();
+        if (baseIssue != null) return baseIssue;
+
+        // Reject karting drivers older than the junior age limit.
+        if (Age > 18)
+            return "Driver is older than 18 and no longer eligible for junior karting.";
+
+        return null;
+    }
 }

@@ -93,14 +93,13 @@ public class RacingService
         Driver driver = Drivers.GetById(driverId);
         Team team = Teams.GetById(teamId);
 
-        // Reject already-signed drivers with a domain specific exception.
-        if (driver.HasContract)
-            throw new InvalidContractException($"{driver.DisplayName} already has a contract.");
-
-        // Reject drivers who are not medically/legally clear.
-        if (!driver.IsAvailable())
+        // Ask the driver for the first business rule that prevents the signing.
+        // The returned sentence already explains the cause (suspended, injured,
+        // under-age for F1, over-age for karting, already signed, ...).
+        string? issue = driver.GetAvailabilityIssue();
+        if (issue != null)
             throw new InvalidContractException(
-                $"{driver.DisplayName} is not currently available (status: {driver.Fitness}).");
+                $"Cannot sign {driver.DisplayName}. {issue}");
 
         // Validate contract terms.
         if (durationSeasons <= 0)

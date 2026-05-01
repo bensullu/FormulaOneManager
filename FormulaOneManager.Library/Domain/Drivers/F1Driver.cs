@@ -20,4 +20,19 @@ public class F1Driver : Driver
 
     // Returns the canonical motto used in the UI tooltips.
     public override string GetRacingMotto() => "Lights out and away we go!";
+
+    // Adds the FIA Super Licence age requirement on top of the base rules.
+    // FIA regulations require an F1 driver to be at least 18 years old.
+    public override string? GetAvailabilityIssue()
+    {
+        // Run the shared rules first (contract / fitness checks).
+        string? baseIssue = base.GetAvailabilityIssue();
+        if (baseIssue != null) return baseIssue;
+
+        // Reject under-age F1 drivers explicitly.
+        if (Age < 18)
+            return "Driver is below the FIA Super Licence minimum age of 18 for Formula 1.";
+
+        return null;
+    }
 }

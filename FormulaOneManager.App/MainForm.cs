@@ -166,11 +166,15 @@ public partial class MainForm : Form
         Driver? selected = GetSelectedDriver();
         if (selected is null) return;
 
-        // Reject signing attempts at the GUI level too for nicer feedback.
-        if (!selected.IsAvailable())
+        // Reject signing attempts at the GUI level for nicer feedback. The
+        // detailed reason comes straight from the domain model so the user
+        // sees exactly why the driver is unavailable (suspended, injured,
+        // under-age for F1, over-age for karting, already signed, ...).
+        string? issue = selected.GetAvailabilityIssue();
+        if (issue != null)
         {
             MessageBox.Show(this,
-                $"{selected.DisplayName} is not currently available to sign.",
+                $"Cannot sign {selected.DisplayName}.\n\n{issue}",
                 "Contract refused",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
