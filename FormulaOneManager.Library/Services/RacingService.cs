@@ -237,6 +237,10 @@ public class RacingService
         // Future registration dates are rejected.
         if (driver.RegistrationDate > DateTime.Today.AddDays(1))
             throw new ValidationException(nameof(driver.RegistrationDate), "Registration date cannot be in the future.");
+
+        // Polymorphic dispatch: each subclass enforces its own immutable
+        // rules (e.g. F1 needs Age >= 18, junior karting needs Age <= 18).
+        driver.EnsureValidForCategory();
     }
 
     // Local validation helper for teams.

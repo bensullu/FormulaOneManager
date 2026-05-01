@@ -37,8 +37,13 @@ public partial class DriverEditForm : Form
         foreach (FitnessStatus status in Enum.GetValues<FitnessStatus>())
             fitnessCombo.Items.Add(status);
 
-        // React to category changes to swap the category-specific subform.
-        categoryCombo.SelectedIndexChanged += (_, _) => RebuildCategoryGroup(_editing);
+        // React to category changes: clamp the age range to the allowed
+        // values for the picked subclass and rebuild the subform.
+        categoryCombo.SelectedIndexChanged += (_, _) =>
+        {
+            ApplyAgeRangeForCategory();
+            RebuildCategoryGroup(_editing);
+        };
 
         // Wire OK to validation.
         okButton.Click += OnOkClicked;
@@ -47,6 +52,7 @@ public partial class DriverEditForm : Form
         if (_editing != null)
         {
             categoryCombo.SelectedItem = _editing.Category;
+            ApplyAgeRangeForCategory();
             firstNameBox.Text = _editing.FirstName;
             lastNameBox.Text = _editing.LastName;
             nationalityBox.Text = _editing.Nationality;
@@ -56,7 +62,7 @@ public partial class DriverEditForm : Form
             registrationPicker.Value = _editing.RegistrationDate.Date >= registrationPicker.MinDate
                 ? _editing.RegistrationDate
                 : DateTime.Today;
-            signedCheck.Checked = _editing.HasContract;
+            statusValue.Text = _editing.HasContract ? "Under contract" : "Free agent";
 
             // Disable changing category when editing - the type is immutable.
             categoryCombo.Enabled = false;
@@ -66,15 +72,48 @@ public partial class DriverEditForm : Form
         {
             // Sensible defaults for a new entry.
             categoryCombo.SelectedIndex = 0;
+            ApplyAgeRangeForCategory();
             genderCombo.SelectedItem = DriverGender.Unknown;
             fitnessCombo.SelectedItem = FitnessStatus.Fit;
             registrationPicker.Value = DateTime.Today;
-            ageBox.Value = 25;
+            ageBox.Value = Math.Max(ageBox.Minimum, 25);
+            statusValue.Text = "Free agent";
             Text = "Add driver";
         }
 
         // Build the category-specific subform once with the current selection.
         RebuildCategoryGroup(_editing);
+    }
+
+    // Restricts the NumericUpDown to the age range each category permits
+    // so the user simply cannot type an invalid age. The same rule is also
+    // enforced by the service's EnsureValidForCategory call as a safety net.
+    private void ApplyAgeRangeForCategory()
+    {
+        string category = (categoryCombo.SelectedItem as string) ?? "F1";
+
+        // F1 forbids drivers under 18 (FIA Super Licence).
+        // Junior karting forbids drivers over 18.
+        // Other categories accept any reasonable age.
+        switch (category)
+        {
+            case "F1":
+                ageBox.Minimum = 18;
+                ageBox.Maximum = 80;
+                break;
+            case "Karting":
+                ageBox.Minimum = 5;
+                ageBox.Maximum = 18;
+                break;
+            default:
+                ageBox.Minimum = 0;
+                ageBox.Maximum = 80;
+                break;
+        }
+
+        // Make sure the current value still fits the new range.
+        if (ageBox.Value < ageBox.Minimum) ageBox.Value = ageBox.Minimum;
+        if (ageBox.Value > ageBox.Maximum) ageBox.Value = ageBox.Maximum;
     }
 
     // Builds the category-specific input controls.
@@ -199,9 +238,14 @@ public partial class DriverEditForm : Form
             }
         };
 
-        // Preserve the id when editing so the repository can locate the entry.
+        // Preserve the id and the existing contract status when editing so
+        // the repository can locate the entry and the user cannot bypass the
+        // "Sign contract" workflow by toggling a checkbox.
         if (_editing != null)
+        {
             driver.Id = _editing.Id;
+            driver.HasContract = _editing.HasContract;
+        }
 
         // Common fields fill last so editor users see them as the source of truth.
         driver.FirstName = firstNameBox.Text.Trim();
@@ -211,7 +255,6 @@ public partial class DriverEditForm : Form
         driver.Gender = (DriverGender)(genderCombo.SelectedItem ?? DriverGender.Unknown);
         driver.Fitness = (FitnessStatus)(fitnessCombo.SelectedItem ?? FitnessStatus.Unknown);
         driver.RegistrationDate = registrationPicker.Value.Date;
-        driver.HasContract = signedCheck.Checked;
 
         Result = driver;
     }

@@ -1,4 +1,6 @@
 // Concrete Driver subclass representing a Formula 1 driver.
+using FormulaOneManager.Library.Exceptions;
+
 namespace FormulaOneManager.Library.Domain.Drivers;
 
 // F1 drivers track championship titles and pole positions for statistics.
@@ -34,5 +36,15 @@ public class F1Driver : Driver
             return "Driver is below the FIA Super Licence minimum age of 18 for Formula 1.";
 
         return null;
+    }
+
+    // Hard rule enforced when adding or updating: F1 drivers must be
+    // at least 18 years old (FIA Super Licence). Throws a ValidationException
+    // so the GUI can surface the reason directly.
+    public override void EnsureValidForCategory()
+    {
+        if (Age < 18)
+            throw new ValidationException(nameof(Age),
+                "Formula 1 drivers must be at least 18 years old (FIA Super Licence rule).");
     }
 }

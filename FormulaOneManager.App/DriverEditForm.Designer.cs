@@ -23,7 +23,8 @@ partial class DriverEditForm
     private ComboBox fitnessCombo = null!;
     private Label registrationLabel = null!;
     private DateTimePicker registrationPicker = null!;
-    private CheckBox signedCheck = null!;
+    private Label statusLabel = null!;
+    private Label statusValue = null!;
 
     // Category specific group box (rebuilt when category changes).
     private GroupBox categoryGroup = null!;
@@ -98,8 +99,17 @@ partial class DriverEditForm
         registrationLabel = new Label { Text = "Registered on:", AutoSize = true, Anchor = AnchorStyles.Left };
         registrationPicker = new DateTimePicker { Width = 240, Format = DateTimePickerFormat.Short };
 
-        // Already signed flag (read-only marker; usually managed via Sign button).
-        signedCheck = new CheckBox { Text = "Already signed", AutoSize = true };
+        // Read-only contract status display - cannot be edited from this
+        // dialog; contracts are managed exclusively through the Sign Contract
+        // workflow so business rules cannot be bypassed.
+        statusLabel = new Label { Text = "Contract status:", AutoSize = true, Anchor = AnchorStyles.Left };
+        statusValue = new Label
+        {
+            AutoSize = true,
+            Anchor = AnchorStyles.Left,
+            Text = "Free agent",
+            Font = new Font(Font, FontStyle.Italic)
+        };
 
         // Add every control to the table layout.
         layout.Controls.Add(categoryLabel, 0, 0);     layout.Controls.Add(categoryCombo, 1, 0);
@@ -110,7 +120,7 @@ partial class DriverEditForm
         layout.Controls.Add(genderLabel, 0, 5);       layout.Controls.Add(genderCombo, 1, 5);
         layout.Controls.Add(fitnessLabel, 0, 6);      layout.Controls.Add(fitnessCombo, 1, 6);
         layout.Controls.Add(registrationLabel, 0, 7); layout.Controls.Add(registrationPicker, 1, 7);
-        layout.Controls.Add(new Label(), 0, 8);       layout.Controls.Add(signedCheck, 1, 8);
+        layout.Controls.Add(statusLabel, 0, 8);       layout.Controls.Add(statusValue, 1, 8);
 
         // Category specific section.
         categoryGroup = new GroupBox

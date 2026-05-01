@@ -1,4 +1,6 @@
 // Concrete Driver subclass representing a karting driver.
+using FormulaOneManager.Library.Exceptions;
+
 namespace FormulaOneManager.Library.Domain.Drivers;
 
 // Karting drivers track their racing class and recent victories.
@@ -30,5 +32,14 @@ public class KartingDriver : Driver
             return "Driver is older than 18 and no longer eligible for junior karting.";
 
         return null;
+    }
+
+    // Hard rule enforced when adding or updating: junior karting drivers
+    // must be 18 or younger.
+    public override void EnsureValidForCategory()
+    {
+        if (Age > 18)
+            throw new ValidationException(nameof(Age),
+                "Junior karting drivers must be 18 years old or younger.");
     }
 }

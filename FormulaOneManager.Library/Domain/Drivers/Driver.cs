@@ -51,6 +51,16 @@ public abstract class Driver : RacingEntity
     // Each subclass returns its racing motto (used in tooltips and logs).
     public abstract string GetRacingMotto();
 
+    // Validates immutable category-specific domain rules (e.g. F1 needs age
+    // >= 18). The base implementation has no rules; subclasses override and
+    // throw a ValidationException when their constraints are violated.
+    // This is invoked from RacingService.ValidateDriver, so the rule is
+    // enforced both when adding and when updating a driver.
+    public virtual void EnsureValidForCategory()
+    {
+        // No category-specific rules in the base class.
+    }
+
     // Returns null when the driver is available to sign, otherwise a sentence
     // describing the first business rule that prevents the contract.
     // Concrete subclasses may chain to base.GetAvailabilityIssue() and add
